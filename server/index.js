@@ -13,13 +13,16 @@ const path = require("path");
 // cors
 const cors = require("cors");
 
+// Form data parser
+const multer = require("multer");
+
 //using express
 const app = express();
 
 // app.use(cors());
 //using bodyparser
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
     "Access-Control-Allow-Headers",
@@ -57,13 +60,42 @@ app.post("/subscribe", (req, res) => {
   res.status(201).json({});
 
   //create paylod: specified the detals of the push notification
-  const payload = JSON.stringify({ title: "Hello from node.js backend", openUrl: '/help/'});
+  const payload = JSON.stringify({
+    title: "Hello from node.js backend",
+    openUrl: "/help/",
+  });
 
   setTimeout(() => {
     webpush
-      .sendNotification(subscription, JSON.stringify({ title: "TIMEOUT MSG", body: "Okay, it works perfect now", openUrl: '/' }))
+      .sendNotification(
+        subscription,
+        JSON.stringify({
+          title: "TIMEOUT MSG",
+          body: "Okay, it works perfect now",
+          openUrl: "/",
+        })
+      )
       .catch((err) => console.log(err));
   }, 5000);
+});
+
+const kindDb = {};
+
+const upload = multer();
+// const upload = multer({ dest: "./uploads" });
+
+app.post("/posts", upload.single("file"), (req, res) => {
+  const file = req.file;
+  const body = req.body;
+  kindDb[body.id] = {
+    ...body,
+    image: file,
+  };
+  res.status(201).json({});
+});
+
+app.get("/posts", (req, res) => {
+  res.status(200).json(Object.values(kindDb));
 });
 
 const port = 3010;
